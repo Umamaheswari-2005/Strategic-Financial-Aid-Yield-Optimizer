@@ -1,99 +1,134 @@
 # Strategic Financial Aid Yield Optimizer
 
-A machine learning-based system for predicting **student enrollment probability** and supporting **financial aid optimization** by considering academic, financial, demographic, institutional, and competing-offer factors.
+A machine learning-based financial-aid and enrollment prediction system designed to estimate **student enrollment probability** from academic, financial, demographic, institutional, geographic, and financial-aid related characteristics.
 
-The project uses a **Random Forest Classifier** to estimate the probability that an admitted student will enroll and evaluates different financial-aid scenarios to support decisions that balance **enrollment, expected revenue, and support for students with higher financial need**.
+The project supports two dataset environments:
 
----
+* 🇮🇳 **Tamil Nadu / Indian Dataset**
+* 🇺🇸 **US Financial Aid Dataset**
 
-## 📌 Project Overview
+The project includes synthetic dataset generation, machine-learning model training, model testing, enrollment probability prediction, financial-aid scenario analysis, Flask REST API deployment, Redis-based prediction caching, and RabbitMQ-based asynchronous event processing.
 
-Educational institutions need to balance two important objectives:
-
-* Increasing student enrollment and yield
-* Maintaining financial sustainability while supporting students with higher financial need
-
-A fixed financial-aid percentage may not be suitable for every student because applicants have different academic, financial, demographic, and institutional characteristics.
-
-The **Strategic Financial Aid Yield Optimizer** addresses this challenge by:
-
-1. Generating and preparing a synthetic student dataset.
-2. Preprocessing numerical and categorical applicant features.
-3. Training a Random Forest classification model.
-4. Predicting enrollment probability.
-5. Simulating different financial-aid levels.
-6. Estimating net price and expected revenue.
-7. Applying enrollment, revenue, and equity-related constraints.
-8. Providing applicant-level predictions through a Flask REST API.
-
-> **Note:** A synthetic dataset is used because real student admission and financial-aid data is confidential and was not available for this prototype.
+> **Note:** The datasets used in this project are synthetic. They are intended for educational, research, prototyping, and system-development purposes and do not represent real student admission or financial-aid records.
 
 ---
 
-## 🎯 Objectives
+# 📌 Project Overview
 
-The primary objectives of this project are:
+Educational institutions need to understand how different academic, financial, geographic, and aid-related factors may be associated with a student's enrollment decision.
 
-* Predict whether an admitted student is likely to enroll.
-* Estimate the probability of enrollment for individual applicants.
-* Identify factors that contribute to enrollment decisions.
-* Simulate different financial-aid scenarios.
-* Estimate the effect of aid on net price and expected revenue.
-* Support higher-need students through equity-related constraints.
-* Provide a reusable machine-learning pipeline.
-* Expose the trained model through a REST API for application integration.
+A student's enrollment decision can depend on factors such as:
 
----
+* Family or household financial situation
+* Financial aid and scholarship support
+* Academic performance
+* Institutional characteristics
+* Distance from the institution
+* Student engagement
+* Competing educational offers
+* Residency status
+* Demonstrated interest
+* Net price after financial aid
 
-## 🏗️ Project Architecture
+The **Strategic Financial Aid Yield Optimizer** uses machine-learning models to estimate the probability that an admitted student will enroll.
+
+The project is implemented as a modular workflow:
 
 ```text
-                    ┌───────────────────────────┐
-                    │   Synthetic Dataset       │
-                    │   Generation Notebook     │
-                    └─────────────┬─────────────┘
-                                  │
-                                  ▼
-                    ┌───────────────────────────┐
-                    │   Dataset                 │
-                    │   tn_synthetic_aid_       │
-                    │   dataset.csv              │
-                    └─────────────┬─────────────┘
-                                  │
-                                  ▼
-                    ┌───────────────────────────┐
-                    │   Model Training Notebook │
-                    │                           │
-                    │ • Preprocessing           │
-                    │ • Train/Test Split        │
-                    │ • Random Forest           │
-                    │ • Evaluation              │
-                    └─────────────┬─────────────┘
-                                  │
-                                  ▼
-                    ┌───────────────────────────┐
-                    │   Trained ML Pipeline     │
-                    │   yield_model_pipeline.pkl│
-                    └─────────────┬─────────────┘
-                                  │
-                         ┌────────┴────────┐
-                         ▼                 ▼
-              ┌──────────────────┐  ┌──────────────────┐
-              │ Model Testing    │  │ Flask REST API   │
-              │ Notebook         │  │ Endpoint         │
-              └──────────────────┘  └────────┬─────────┘
-                                             │
-                                             ▼
-                                  ┌────────────────────┐
-                                  │ Applicant JSON     │
-                                  │ Prediction         │
-                                  │ + Probability      │
-                                  └────────────────────┘
+Dataset Generation
+        ↓
+Data Preparation
+        ↓
+Feature Engineering
+        ↓
+Model Training
+        ↓
+Model Evaluation
+        ↓
+Model Testing
+        ↓
+Enrollment Probability Prediction
+        ↓
+Financial-Aid Scenario Analysis
+        ↓
+Flask REST API
+        ↓
+Redis Caching + RabbitMQ Messaging
 ```
 
 ---
 
-## 📂 Project Structure
+# 🎯 Objectives
+
+The main objectives of the project are:
+
+* Generate synthetic financial-aid and enrollment datasets.
+* Prepare applicant data for machine-learning models.
+* Predict whether a student is likely to enroll.
+* Estimate enrollment probability using `predict_proba()`.
+* Evaluate trained models using classification metrics.
+* Analyze important model features.
+* Test the effect of different financial-aid levels on predicted enrollment probability.
+* Provide applicant-level predictions through a Flask REST API.
+* Cache prediction results using Redis.
+* Publish prediction events through RabbitMQ.
+* Process prediction events asynchronously using a RabbitMQ consumer.
+* Maintain separate workflows for Tamil Nadu and US datasets.
+
+---
+
+# 🏗️ Project Architecture
+
+```text
+                         ┌───────────────────────────┐
+                         │    Synthetic Dataset      │
+                         │       Generation          │
+                         └─────────────┬─────────────┘
+                                       │
+                  ┌────────────────────┴────────────────────┐
+                  │                                         │
+                  ▼                                         ▼
+       ┌──────────────────────┐                 ┌──────────────────────┐
+       │ Tamil Nadu Dataset   │                 │ US Dataset           │
+       │ 6,000 × 18           │                 │ 6,000 × 25           │
+       └──────────┬───────────┘                 └──────────┬───────────┘
+                  │                                        │
+                  ▼                                        ▼
+       ┌──────────────────────┐                 ┌──────────────────────┐
+       │ Random Forest Model  │                 │ XGBoost Model        │
+       │ + preprocessing      │                 │ + model-ready data   │
+       └──────────┬───────────┘                 └──────────┬───────────┘
+                  │                                        │
+                  └────────────────┬───────────────────────┘
+                                   ▼
+                         ┌──────────────────────┐
+                         │ Model Testing        │
+                         │ & Validation         │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────────┐
+                         │ Enrollment           │
+                         │ Probability          │
+                         └──────────┬───────────┘
+                                    │
+                    ┌───────────────┼────────────────┐
+                    ▼               ▼                ▼
+             ┌────────────┐ ┌──────────────┐ ┌──────────────┐
+             │ Flask API  │ │    Redis     │ │  RabbitMQ    │
+             │ /predict   │ │    Cache     │ │   Queue      │
+             └────────────┘ └──────────────┘ └──────┬───────┘
+                                                    │
+                                                    ▼
+                                            ┌──────────────┐
+                                            │   Consumer   │
+                                            │ Event Process│
+                                            └──────────────┘
+```
+
+---
+
+# 📂 Project Structure
 
 ```text
 Strategic-Financial-Aid-Yield-Optimizer/
@@ -102,32 +137,50 @@ Strategic-Financial-Aid-Yield-Optimizer/
 ├── Strategic_Financial_Aid_Yield_Optimizer_train.ipynb
 ├── Strategic_Financial_Aid_Yield_Optimizer_test.ipynb
 ├── Strategic_Financial_Aid_Yield_Optimizer_endpoint.ipynb
+├── Strategic_Financial_Aid_Yield_Optimizer_end_to_end.ipynb
+├── Strategic_Financial_Aid_Yield_Optimizer_rabbitmq.ipynb
+├── Strategic_Financial_Aid_Yield_Optimizer_redis.ipynb
 │
 ├── tn_synthetic_aid_dataset.csv
+├── us_financial_aid_yield_dataset.csv
+├── us_dataset_model_ready.csv
+│
 ├── yield_model_pipeline.pkl
 │
-├── README.md
-└── Documentation/
+└── README.md
 ```
 
-The project is divided into separate notebooks so that **dataset generation, model training, model testing, and API deployment** can be developed and executed independently.
+The project is divided into separate notebooks so that dataset generation, model training, testing, API deployment, caching, and message processing can be developed and tested independently.
 
 ---
 
-# 📓 Google Colab Notebooks
+# 📓 Project Notebooks
 
-## 1. Synthetic Dataset Generation
+## 1. Dataset Generation
 
-**Notebook:** `Strategic_Financial_Aid_Yield_Optimizer_dataset_generator.ipynb`
+### Notebook
 
-This notebook is responsible for creating the synthetic student dataset using **Python, NumPy, and Pandas**.
+```text
+Strategic_Financial_Aid_Yield_Optimizer_dataset_generator.ipynb
+```
 
-The generated dataset contains:
+This notebook contains synthetic dataset generation for both the Tamil Nadu and US environments.
 
-* **6,000 student records**
-* **18 columns**
+The notebook contains separate dataset-generation sections for:
 
-The dataset represents academic, financial, demographic, institutional, aid-related, and enrollment information.
+* Tamil Nadu / Indian dataset
+* US financial-aid dataset
+
+---
+
+# 🇮🇳 Tamil Nadu Dataset
+
+The Tamil Nadu synthetic dataset contains:
+
+```text
+Records : 6,000
+Columns : 18
+```
 
 ### Dataset File
 
@@ -135,566 +188,1311 @@ The dataset represents academic, financial, demographic, institutional, aid-rela
 tn_synthetic_aid_dataset.csv
 ```
 
-### Notebook
+### Dataset Columns
 
-[Open Dataset Generator in Google Colab](https://colab.research.google.com/drive/1i0nXk5Xb9OvnfmCihBkVGXc1uPlrpPd8?usp=sharing)
+| Column             | Description                        |
+| ------------------ | ---------------------------------- |
+| `district`         | Applicant's district               |
+| `category`         | Student category                   |
+| `urban`            | Urban/non-urban indicator          |
+| `family_income`    | Family income                      |
+| `first_gen`        | First-generation student indicator |
+| `parent_grad`      | Parent graduation indicator        |
+| `cutoff_12th`      | 12th-standard academic score       |
+| `entrance_score`   | Entrance examination score         |
+| `college_tier`     | Institutional/college tier         |
+| `tuition`          | Tuition amount                     |
+| `distance_km`      | Distance from institution          |
+| `competing_offers` | Number of competing offers         |
+| `merit_aid_pct`    | Merit-based aid percentage         |
+| `need_aid_pct`     | Need-based aid percentage          |
+| `total_aid_pct`    | Total aid percentage               |
+| `aid_amount`       | Financial-aid amount               |
+| `net_price`        | Amount remaining after aid         |
+| `enrolled`         | Enrollment target variable         |
+
+The target variable is:
+
+```text
+enrolled
+```
+
+where:
+
+```text
+0 = Not Enrolled
+1 = Enrolled
+```
 
 ---
 
-# 📊 Dataset Description
+# 🇺🇸 US Financial Aid Dataset
 
-The dataset contains the following fields:
+The raw US dataset contains:
 
-| Field              | Description                          | Purpose                                                 |
-| ------------------ | ------------------------------------ | ------------------------------------------------------- |
-| `district`         | Applicant's district                 | Represents geographical/location-related information    |
-| `category`         | Student category                     | Represents demographic/category-related characteristics |
-| `urban`            | Urban/non-urban indicator            | Represents location and accessibility context           |
-| `family_income`    | Family income                        | Helps represent financial affordability and aid need    |
-| `first_gen`        | First-generation student indicator   | Represents educational background                       |
-| `parent_grad`      | Parent graduation indicator          | Represents parental educational background              |
-| `cutoff_12th`      | 12th-standard academic cutoff/score  | Represents academic performance                         |
-| `entrance_score`   | Entrance examination score           | Represents academic merit                               |
-| `college_tier`     | College institutional tier           | Represents institutional characteristics                |
-| `tuition`          | Tuition amount                       | Used to represent the cost before financial aid         |
-| `distance_km`      | Distance from student to institution | Represents accessibility and travel considerations      |
-| `competing_offers` | Number of competing college offers   | Represents alternative enrollment opportunities         |
-| `merit_aid_pct`    | Merit-based aid percentage           | Represents aid awarded based on academic merit          |
-| `need_aid_pct`     | Need-based aid percentage            | Represents financial-need-based support                 |
-| `total_aid_pct`    | Total aid percentage                 | Represents the overall aid percentage                   |
-| `aid_amount`       | Financial aid amount                 | Represents the monetary value of aid                    |
-| `net_price`        | Tuition after financial aid          | Represents the effective amount paid after aid          |
-| `enrolled`         | Enrollment target variable           | `0 = Not Enrolled`, `1 = Enrolled`                      |
+```text
+Records : 6,000
+Columns : 25
+```
 
-The target variable `enrolled` is generated using a probability-based approach influenced by factors including affordability, academic merit, competing offers, distance, and other student-related factors.
+### Dataset File
+
+```text
+us_financial_aid_yield_dataset.csv
+```
+
+### Raw Dataset Columns
+
+| Column                        | Description                          |
+| ----------------------------- | ------------------------------------ |
+| `state_residency`             | Applicant's state of residence       |
+| `is_in_state`                 | In-state applicant indicator         |
+| `urban_centric_locale`        | Geographic/locale category           |
+| `student_aid_index`           | Student financial-aid index          |
+| `adjusted_gross_income`       | Adjusted gross income                |
+| `first_gen`                   | First-generation indicator           |
+| `pell_eligible`               | Pell eligibility indicator           |
+| `hs_gpa`                      | High-school GPA                      |
+| `sat_act_percentile`          | SAT/ACT percentile                   |
+| `institutional_tier`          | Institution classification           |
+| `cost_of_attendance`          | Cost of attendance                   |
+| `miles_from_campus`           | Distance from campus                 |
+| `fafsa_submitted_month`       | FAFSA submission month               |
+| `fafsa_month_sin`             | Sine transformation of FAFSA month   |
+| `fafsa_month_cos`             | Cosine transformation of FAFSA month |
+| `demonstrated_interest`       | Demonstrated student interest        |
+| `merit_scholarship_amt`       | Merit scholarship amount             |
+| `need_grant_amt`              | Need-based grant amount              |
+| `total_aid_package`           | Total financial-aid package          |
+| `net_price`                   | Net price after aid                  |
+| `enrolled`                    | Enrollment target                    |
+| `net_price_to_income_ratio`   | Net price relative to income         |
+| `financial_aid_discount_rate` | Financial-aid discount rate          |
+| `unmet_financial_need_gap`    | Remaining financial-need gap         |
+| `engagement_velocity`         | Student engagement measure           |
+
+---
+
+# 📊 US Model-Ready Dataset
+
+The project also contains a processed US dataset:
+
+```text
+us_dataset_model_ready.csv
+```
+
+It contains:
+
+```text
+Records : 6,000
+Columns : 24
+```
+
+The model-ready dataset removes raw fields that are not directly used by the trained model and represents categorical information in numerical form.
+
+### Model-Ready Features
+
+```text
+is_in_state
+student_aid_index
+adjusted_gross_income
+first_gen
+pell_eligible
+hs_gpa
+sat_act_percentile
+institutional_tier
+cost_of_attendance
+miles_from_campus
+fafsa_month_sin
+fafsa_month_cos
+demonstrated_interest
+merit_scholarship_amt
+need_grant_amt
+net_price
+enrolled
+net_price_to_income_ratio
+financial_aid_discount_rate
+unmet_financial_need_gap
+engagement_velocity
+urban_centric_locale_Rural
+urban_centric_locale_Suburb
+urban_centric_locale_Town
+```
+
+The target variable remains:
+
+```text
+enrolled
+```
 
 ---
 
 # 🤖 2. Model Training
 
-**Notebook:** `Strategic_Financial_Aid_Yield_Optimizer_train.ipynb`
+### Notebook
 
-This notebook loads the generated dataset and performs the complete model-training workflow.
+```text
+Strategic_Financial_Aid_Yield_Optimizer_train.ipynb
+```
+
+The training notebook contains model-training workflows for the project datasets.
+
+---
+
+## 🇮🇳 Tamil Nadu Model
+
+The Tamil Nadu model uses:
+
+```text
+Random Forest Classifier
+```
 
 ### Training Workflow
 
 ```text
 Load Dataset
-      ↓
-Data Validation
-      ↓
-Feature Selection
-      ↓
-Separate Features & Target
-      ↓
-Train/Test Split
-      ↓
-Feature Preprocessing
-      ↓
+     ↓
+Select Features
+     ↓
+Separate Features and Target
+     ↓
+80/20 Train-Test Split
+     ↓
+Numerical Preprocessing
+     ↓
+Categorical Preprocessing
+     ↓
 Random Forest Training
-      ↓
+     ↓
+Prediction
+     ↓
 Model Evaluation
-      ↓
-Probability Prediction
-      ↓
+     ↓
 Feature Importance
-      ↓
-Save Trained Pipeline
+     ↓
+Save Model
 ```
 
-### Train/Test Split
+### Features
 
-The dataset is divided into:
+Numerical features include:
 
-* **80% training data**
-* **20% testing data**
+```text
+urban
+family_income
+first_gen
+parent_grad
+cutoff_12th
+entrance_score
+tuition
+distance_km
+competing_offers
+merit_aid_pct
+need_aid_pct
+total_aid_pct
+aid_amount
+net_price
+```
 
-Stratified sampling is used to maintain a similar distribution of enrolled and non-enrolled students across the training and testing datasets.
+Categorical features include:
+
+```text
+district
+category
+college_tier
+```
 
 ### Preprocessing
 
-The preprocessing pipeline handles:
-
-* **Numerical features** → `StandardScaler`
-* **Categorical features** → `OneHotEncoder`
-
-This ensures that the different feature types are converted into a format suitable for machine-learning training.
-
-### Machine Learning Algorithm
-
-The project uses a:
-
-**Random Forest Classifier**
-
-Configuration:
+Numerical features use:
 
 ```text
-Number of Trees      : 300
-Maximum Depth        : 10
-Minimum Leaf Size    : 5
+StandardScaler
 ```
 
-The Random Forest model is trained using the preprocessed numerical and categorical features.
+Categorical features use:
 
-### Model Evaluation
+```text
+OneHotEncoder
+```
 
-The model is evaluated using:
+with:
+
+```text
+handle_unknown = "ignore"
+```
+
+### Random Forest Configuration
+
+```text
+n_estimators     = 300
+max_depth        = 10
+min_samples_leaf = 5
+random_state     = 42
+n_jobs            = -1
+```
+
+The preprocessing and classifier are combined into a single scikit-learn `Pipeline`.
+
+---
+
+# 🇺🇸 US Model
+
+The US model uses:
+
+```text
+XGBoost Classifier
+```
+
+The US dataset is already converted into a model-ready numerical representation before model training.
+
+### US Model Configuration
+
+```text
+n_estimators     = 300
+max_depth        = 5
+learning_rate    = 0.05
+subsample        = 0.8
+colsample_bytree = 0.8
+eval_metric      = logloss
+random_state     = 42
+n_jobs            = -1
+```
+
+The model is stored inside a scikit-learn `Pipeline` containing:
+
+```text
+Preprocessor
+     ↓
+XGBoost Classifier
+```
+
+Since the US model-ready features are numerical/binary, no additional one-hot encoding or feature scaling is required during model training.
+
+---
+
+# 📈 Model Evaluation
+
+The training workflow evaluates model performance using:
 
 * Accuracy
+* Precision
+* Recall
+* F1-score
 * ROC-AUC
-* Classification Report
-* ROC Curve
+* Classification report
+* ROC curve where applicable
+* Feature importance
 
-These metrics are used to assess how effectively the model predicts student enrollment.
-
-### Enrollment Probability
-
-The model uses:
+The model also produces enrollment probabilities using:
 
 ```python
 predict_proba()
 ```
 
-to generate the estimated probability that an admitted student will enroll.
+The probability for class `1` represents the estimated enrollment probability.
 
-Feature-importance analysis is also performed to identify features contributing to the model's predictions.
+---
 
-### Saved Model
+# 💾 Trained Model
 
-The trained pipeline is serialized using Pickle:
+The trained pipeline is saved as:
 
 ```text
 yield_model_pipeline.pkl
 ```
 
-### Notebook
+The exact object structure depends on the model-training workflow.
 
-[Open Model Training Notebook in Google Colab](https://colab.research.google.com/drive/14oMuVLanayiex6UrsG5OsTvssNRZyri8?usp=sharing)
+### Tamil Nadu Model
+
+The Tamil Nadu training workflow saves a bundle containing:
+
+```text
+pipeline
+num_feats
+cat_feats
+target
+trained_on
+metrics
+notes
+```
+
+### US Model
+
+The US training workflow saves the trained pipeline directly:
+
+```text
+Pipeline
+ ├── preprocessor
+ └── classifier
+```
+
+This distinction is important when loading the model. The US pipeline should be loaded directly rather than attempting to access:
+
+```python
+bundle['pipeline']
+```
 
 ---
 
 # 🧪 3. Model Testing
 
-**Notebook:** `Strategic_Financial_Aid_Yield_Optimizer_test.ipynb`
-
-The testing notebook is used to verify the trained machine-learning pipeline independently from the training process.
-
-### Testing Workflow
-
-```text
-Load Pretrained Pipeline
-          ↓
-Prepare Applicant Data
-          ↓
-Run Prediction
-          ↓
-Generate Enrollment Probability
-          ↓
-Validate Output
-```
-
-The notebook demonstrates how a new applicant profile can be passed to the trained model to obtain an enrollment prediction and probability.
-
 ### Notebook
 
-[Open Model Testing Notebook in Google Colab](https://colab.research.google.com/drive/1D_V0oWqsJlrVuvIgNaMeHVe3gn0a3uw4?usp=sharing)
+```text
+Strategic_Financial_Aid_Yield_Optimizer_test.ipynb
+```
+
+The testing notebook contains separate testing workflows for the Tamil Nadu and US models.
 
 ---
 
-# 🌐 4. Flask REST API Endpoint
+## Tamil Nadu Model Testing
 
-**Notebook:** `Strategic_Financial_Aid_Yield_Optimizer_endpoint.ipynb`
-
-A Flask-based REST API is implemented to make the trained ML pipeline accessible through an API endpoint.
-
-### API Workflow
+The Tamil Nadu testing workflow:
 
 ```text
-Client Application
-       │
-       │ JSON Applicant Data
-       ▼
-┌─────────────────────┐
-│ Flask REST API      │
-│                     │
-│ /predict            │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ ML Pipeline         │
-│                     │
-│ Preprocessing       │
-│ + Random Forest     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Prediction          │
-│ + Probability       │
-└─────────────────────┘
+Load Model
+     ↓
+Load Holdout Dataset
+     ↓
+Check Model Bundle
+     ↓
+Validate Feature Configuration
+     ↓
+Run Predictions
+     ↓
+Evaluate Test Results
 ```
 
-## API Endpoints
+The testing workflow verifies the trained model and its required feature configuration before performing inference.
 
-### Health Check
+---
+
+## US Model Testing
+
+The US testing workflow loads the trained XGBoost pipeline directly.
+
+The model's expected feature columns are obtained from:
+
+```python
+pipeline.feature_names_in_
+```
+
+The testing workflow reproduces the transformations used during model preparation.
+
+### US preprocessing includes:
+
+* Institutional-tier mapping
+* Locale one-hot representation
+* Net-price-to-income transformation
+* Exact feature-column alignment
+
+---
+
+# 💰 Financial-Aid Scenario Analysis
+
+The US model-testing notebook includes an aid-level scenario analysis.
+
+Example aid levels include:
 
 ```text
+$0
+$5,000
+$10,000
+$15,000
+$20,000
+$25,000
+```
+
+For each aid level, the system calculates:
+
+```text
+Cost of Attendance
+        ↓
+Financial Aid
+        ↓
+Net Price
+        ↓
+Enrollment Probability
+```
+
+This allows the project to examine how predicted enrollment probability changes as financial aid increases.
+
+The testing workflow evaluates the resulting price-sensitivity curve and checks whether predicted enrollment probability generally increases with additional aid, allowing a small tolerance for model variation.
+
+---
+
+# 🌐 4. Flask REST API
+
+### Notebook
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_endpoint.ipynb
+```
+
+The Flask notebook exposes the trained model through HTTP endpoints.
+
+### API Architecture
+
+```text
+Client
+  │
+  │ JSON Applicant Data
+  ▼
+┌─────────────────────────┐
+│      Flask API          │
+│                         │
+│      /health            │
+│      /predict           │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│     ML Pipeline         │
+│                         │
+│  Preprocessing          │
+│       +                 │
+│  Classifier             │
+└────────────┬────────────┘
+             │
+             ▼
+┌─────────────────────────┐
+│ Enrollment Prediction   │
+│ + Probability           │
+└─────────────────────────┘
+```
+
+---
+
+# 🔎 API Endpoints
+
+## Health Check
+
+```http
 GET /health
 ```
 
-Used to verify whether the API server is running.
+The endpoint checks whether the Flask API is running and whether the model has been loaded.
 
-### Prediction
+Example:
 
-```text
+```json
+{
+  "status": "ok",
+  "model_loaded": true
+}
+```
+
+---
+
+## Prediction
+
+```http
 POST /predict
 ```
 
-The endpoint accepts applicant information as a JSON object and uses the trained pipeline to generate a prediction.
+The endpoint accepts applicant information in JSON format and returns a predicted enrollment outcome and enrollment probability.
 
 ---
 
-## 🔐 API Validation
+# 🛡️ API Validation
 
-The endpoint includes validation for:
+The API validates incoming applicant data.
 
 ### Missing Fields
 
-If required applicant fields are missing, the API returns:
+If required applicant fields are missing:
 
 ```text
-400 Bad Request
+HTTP 400 Bad Request
 ```
 
-with a message identifying the missing fields.
+is returned.
 
-### Invalid Numeric Data
+### Invalid Numeric Fields
 
-If a numerical field contains invalid data, the API returns:
+If a field expected to be numeric contains invalid data, the API returns:
 
 ```text
-400 Bad Request
+HTTP 400 Bad Request
 ```
-
-and identifies the fields that must contain numeric values.
 
 ### Invalid JSON Structure
 
-If the request body is not a JSON object representing an applicant record, the API returns:
+If the request body is not a JSON object, the request is rejected.
+
+---
+
+# 💾 Prediction Output
+
+The Flask API saves prediction results to JSON files in the Colab filesystem.
+
+The API creates:
 
 ```text
-400 Bad Request
+prediction_<timestamp>.json
 ```
 
-with an appropriate validation message.
+and also maintains:
+
+```text
+latest_prediction.json
+```
+
+Each saved prediction contains:
+
+```text
+timestamp
+input
+output
+```
+
+This provides a persistent record of predictions during the active Colab session.
+
+---
+
+# ⚡ 5. Redis Integration
 
 ### Notebook
 
-[Open API Endpoint Notebook in Google Colab](https://colab.research.google.com/drive/1Ph0P2JCNwIz5Eq9Btfj28Is7nJFI_WP8?usp=sharing)
+```text
+Strategic_Financial_Aid_Yield_Optimizer_redis.ipynb
+```
+
+Redis is used as a caching layer for prediction results.
+
+### Redis Workflow
+
+```text
+Prediction Request
+       ↓
+Generate Cache Key
+       ↓
+Check Redis
+       ↓
+Cache Hit ──────→ Return Cached Result
+       │
+       └─ Cache Miss
+              ↓
+        Run ML Prediction
+              ↓
+        Store Result in Redis
+              ↓
+        Return Prediction
+```
+
+The Redis implementation demonstrates:
+
+* Connection
+* `SET`
+* `GET`
+* Update
+* Delete
+* Expiration/TTL
+
+A prediction cache entry can be configured with a time-to-live so that old prediction results are automatically removed.
+
+### Example Cache Key
+
+```text
+yield:demo_applicant_001
+```
 
 ---
 
-# 💰 Financial Aid Optimization
+# 📨 6. RabbitMQ Integration
 
-The optimization layer evaluates multiple financial-aid scenarios rather than applying one fixed aid percentage to every student.
-
-Aid percentages are simulated from:
+### Notebook
 
 ```text
-0% → 80%
+Strategic_Financial_Aid_Yield_Optimizer_rabbitmq.ipynb
 ```
 
-in:
+RabbitMQ is used as a message broker for prediction events.
+
+### RabbitMQ Workflow
 
 ```text
-5% increments
+Flask / Prediction Service
+          │
+          ▼
+    Publish Event
+          │
+          ▼
+┌──────────────────────┐
+│ RabbitMQ Queue       │
+│                      │
+│ yield_prediction_    │
+│ queue                │
+└──────────┬───────────┘
+           │
+           ▼
+     RabbitMQ Consumer
+           │
+           ▼
+    Process Event
 ```
 
-For each scenario, the system estimates:
+The queue used by the project is:
 
-* Enrollment probability
-* Net price
-* Expected revenue
-* Financial-aid impact
+```text
+yield_prediction_queue
+```
 
-This approach allows different aid levels to be considered for different applicant conditions.
+Messages are published as JSON and consumed by a background consumer.
+
+The consumer acknowledges messages after processing them successfully.
 
 ---
 
-## ⚖️ Optimization Constraints
+# 🔄 7. End-to-End Integration
 
-The optimizer considers multiple objectives rather than maximizing enrollment alone.
+### Notebook
 
-The major considerations are:
+```text
+Strategic_Financial_Aid_Yield_Optimizer_end_to_end.ipynb
+```
 
-### 1. Enrollment Probability
+The end-to-end notebook combines the major infrastructure components.
 
-The selected aid package should support a required minimum enrollment probability.
+It demonstrates:
 
-### 2. Expected Revenue
+* Model loading
+* Redis connection
+* RabbitMQ connection
+* Prediction processing
+* Prediction caching
+* Event publishing
+* RabbitMQ consumption
+* Flask API
+* Health checking
+* Applicant prediction
 
-The system estimates expected net revenue after considering the financial-aid amount.
+### End-to-End Flow
 
-### 3. Equity Support
-
-An equity-related constraint is included to provide support for students with higher financial need.
-
-The optimizer therefore considers enrollment, expected revenue, and support for higher-need students together.
+```text
+                Applicant
+                    │
+                    ▼
+             Flask /predict
+                    │
+                    ▼
+            Validate Request
+                    │
+                    ▼
+              Redis Cache
+             ┌──────┴──────┐
+             │             │
+          Cache Hit     Cache Miss
+             │             │
+             │             ▼
+             │       ML Prediction
+             │             │
+             │             ▼
+             │       Store in Redis
+             │             │
+             └──────┬──────┘
+                    │
+                    ▼
+             Prediction Result
+                    │
+                    ▼
+             RabbitMQ Event
+                    │
+                    ▼
+               Queue
+                    │
+                    ▼
+                Consumer
+                    │
+                    ▼
+             Event Processing
+```
 
 ---
 
-# 🔄 End-to-End Workflow
+# 🧩 Tamil Nadu and US Workflows
+
+The project maintains different model pipelines for the two datasets.
+
+| Component            | Tamil Nadu                          | US                                    |
+| -------------------- | ----------------------------------- | ------------------------------------- |
+| Dataset              | `tn_synthetic_aid_dataset.csv`      | `us_financial_aid_yield_dataset.csv`  |
+| Records              | 6,000                               | 6,000                                 |
+| Raw Columns          | 18                                  | 25                                    |
+| Model-Ready Dataset  | Not separate                        | `us_dataset_model_ready.csv`          |
+| Algorithm            | Random Forest                       | XGBoost                               |
+| Numerical Scaling    | StandardScaler                      | Not required                          |
+| Categorical Encoding | OneHotEncoder                       | Preprocessed before training          |
+| Target               | `enrolled`                          | `enrolled`                            |
+| Output               | Enrollment prediction + probability | Enrollment prediction + probability   |
+| Testing              | Holdout/model validation            | Scenario + batch + robustness testing |
+| API                  | Flask                               | Flask                                 |
+| Cache                | Redis                               | Redis                                 |
+| Messaging            | RabbitMQ                            | RabbitMQ                              |
+
+---
+
+# 🧪 US Model Testing Scenarios
+
+The US testing notebook contains multiple inference scenarios.
+
+### Test 1 — High-Need Applicant
+
+A high-need applicant with strong financial support and demonstrated interest is evaluated for enrollment probability.
+
+### Test 2 — High-Price Applicant
+
+An applicant with:
+
+* High net price
+* Lower engagement
+* Greater distance
+* Higher financial resources
+
+is evaluated for predicted enrollment probability.
+
+### Test 3 — Aid Sensitivity
+
+Multiple aid levels are tested to generate a price-sensitivity curve.
 
 ```text
-             ┌──────────────────────┐
-             │ Synthetic Data       │
-             │ Generation           │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Data Validation &    │
-             │ Preprocessing        │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Train/Test Split     │
-             │ 80% / 20%            │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Random Forest        │
-             │ Classifier           │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Model Evaluation     │
-             │ Accuracy / ROC-AUC   │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Enrollment           │
-             │ Probability          │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Aid Scenario         │
-             │ Simulation           │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Optimization         │
-             │ Enrollment + Revenue │
-             │ + Equity             │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Applicant Prediction │
-             └──────────┬───────────┘
-                        │
-                        ▼
-             ┌──────────────────────┐
-             │ Flask REST API       │
-             └──────────────────────┘
+Aid
+ ↓
+Net Price
+ ↓
+Predicted Enrollment Probability
 ```
+
+### Test 4 — Missing Value
+
+The model is tested with a missing SAT/ACT percentile value.
+
+### Test 5 — Batch Prediction
+
+Multiple applicant records are passed together to verify that the model returns one prediction and probability for each input row.
 
 ---
 
 # 🛠️ Technologies Used
 
-| Technology     | Purpose                                            |
-| -------------- | -------------------------------------------------- |
-| Python         | Core programming language                          |
-| Pandas         | Dataset manipulation and analysis                  |
-| NumPy          | Numerical operations and synthetic data generation |
-| Scikit-learn   | Machine learning and preprocessing                 |
-| Random Forest  | Enrollment classification                          |
-| StandardScaler | Numerical feature scaling                          |
-| OneHotEncoder  | Categorical feature encoding                       |
-| Matplotlib     | Visualization and evaluation plots                 |
-| Flask          | REST API development                               |
-| Requests       | API testing                                        |
-| Pickle         | Model serialization                                |
-| Google Colab   | Development and experimentation                    |
-| GitHub         | Source-code management and project hosting         |
+| Technology     | Purpose                                                |
+| -------------- | ------------------------------------------------------ |
+| Python         | Core programming language                              |
+| Pandas         | Data loading and manipulation                          |
+| NumPy          | Numerical operations and synthetic data generation     |
+| Scikit-learn   | Preprocessing, pipelines, Random Forest and evaluation |
+| Random Forest  | Tamil Nadu enrollment classification                   |
+| XGBoost        | US enrollment classification                           |
+| StandardScaler | Numerical feature preprocessing                        |
+| OneHotEncoder  | Tamil Nadu categorical feature encoding                |
+| Matplotlib     | Model evaluation and visualization                     |
+| Flask          | REST API development                                   |
+| Requests       | API testing                                            |
+| Redis          | Prediction caching                                     |
+| RabbitMQ       | Asynchronous prediction-event messaging                |
+| Pika           | Python RabbitMQ client                                 |
+| Pickle         | Model serialization                                    |
+| Google Colab   | Development and execution environment                  |
 
 ---
 
-# 📦 Data and Model Files
+# 📦 Required Python Packages
 
-### Dataset
+Install the main Python dependencies using:
 
-```text
-tn_synthetic_aid_dataset.csv
+```bash
+pip install numpy pandas scikit-learn matplotlib flask requests redis pika xgboost
 ```
 
-Contains the synthetic student records used for model development.
+For Google Colab, XGBoost can also be installed with:
 
-### Trained Model
-
-```text
-yield_model_pipeline.pkl
+```python
+!pip install -q xgboost
 ```
 
-Contains the trained preprocessing and machine-learning pipeline for reuse during testing and API inference.
+The infrastructure notebooks install the required Redis/RabbitMQ Python clients as needed.
 
 ---
 
 # 🚀 Getting Started
 
-## 1. Clone the Repository
+## 1. Open Google Colab
 
-```bash
-git clone https://github.com/Umamaheswari-2005/Strategic-Financial-Aid-Yield-Optimizer.git
-```
+The notebooks are designed to run in a Google Colab environment.
 
-```bash
-cd Strategic-Financial-Aid-Yield-Optimizer
-```
-
-## 2. Install Dependencies
-
-Create a Python environment if required and install the necessary packages:
-
-```bash
-pip install pandas numpy scikit-learn matplotlib flask requests
-```
-
-## 3. Run the Notebooks
-
-The recommended execution order is:
+Recommended order:
 
 ```text
-1. Dataset Generator
+1. Dataset Generation
         ↓
 2. Model Training
         ↓
 3. Model Testing
         ↓
-4. API Endpoint
+4. Redis Setup
+        ↓
+5. RabbitMQ Setup
+        ↓
+6. Flask Endpoint
+        ↓
+7. End-to-End Integration
 ```
 
 ---
 
-# 🧪 API Usage Example
+# 2. Generate the Dataset
 
-A prediction request can be sent to:
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_dataset_generator.ipynb
+```
+
+Run the appropriate dataset-generation section.
+
+The resulting files are:
+
+```text
+tn_synthetic_aid_dataset.csv
+us_financial_aid_yield_dataset.csv
+```
+
+The US workflow additionally produces the model-ready dataset:
+
+```text
+us_dataset_model_ready.csv
+```
+
+---
+
+# 3. Train the Model
+
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_train.ipynb
+```
+
+For the Tamil Nadu dataset, train the Random Forest pipeline.
+
+For the US dataset, train the XGBoost pipeline using the model-ready dataset.
+
+The trained model is saved as:
+
+```text
+yield_model_pipeline.pkl
+```
+
+---
+
+# 4. Test the Model
+
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_test.ipynb
+```
+
+Upload the appropriate trained model and required testing dataset.
+
+Run the test cells to verify:
+
+* Model loading
+* Feature compatibility
+* Predictions
+* Enrollment probabilities
+* Batch inference
+* Scenario analysis
+* Model robustness
+
+---
+
+# 5. Start Redis
+
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_redis.ipynb
+```
+
+The notebook demonstrates starting Redis and performing cache operations.
+
+For a local environment, the default Redis port is:
+
+```text
+6379
+```
+
+---
+
+# 6. Start RabbitMQ
+
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_rabbitmq.ipynb
+```
+
+The default AMQP port is:
+
+```text
+5672
+```
+
+The project uses:
+
+```text
+yield_prediction_queue
+```
+
+for prediction events.
+
+> For deployment, configure RabbitMQ credentials using secure environment variables or a secret-management system. Do not commit credentials to source control.
+
+---
+
+# 7. Run the Flask API
+
+Open:
+
+```text
+Strategic_Financial_Aid_Yield_Optimizer_endpoint.ipynb
+```
+
+Load the trained model and start the Flask application.
+
+The API runs on:
+
+```text
+http://127.0.0.1:5000
+```
+
+Health endpoint:
+
+```text
+GET /health
+```
+
+Prediction endpoint:
+
+```text
+POST /predict
+```
+
+---
+
+# 🧪 API Example — Tamil Nadu
+
+Example applicant structure:
+
+```json
+{
+  "district": "Madurai",
+  "category": "MBC",
+  "urban": 0,
+  "family_income": 210000,
+  "first_gen": 1,
+  "parent_grad": 0,
+  "cutoff_12th": 79.0,
+  "entrance_score": 128.0,
+  "college_tier": "Tier-2 (Affiliated)",
+  "tuition": 110000,
+  "distance_km": 35.0,
+  "competing_offers": 1,
+  "merit_aid_pct": 0.20,
+  "need_aid_pct": 0.35,
+  "total_aid_pct": 0.28,
+  "aid_amount": 30800,
+  "net_price": 79200
+}
+```
+
+Send the request to:
 
 ```text
 POST http://127.0.0.1:5000/predict
 ```
 
-with applicant information in JSON format.
+---
 
-Example structure:
+# 🧮 US Model Input
 
-```json
-{
-  "district": "Coimbatore",
-  "category": "SC",
-  "urban": 1,
-  "family_income": 691000,
-  "first_gen": 0,
-  "parent_grad": 1,
-  "cutoff_12th": 92.35,
-  "entrance_score": 145.6,
-  "college_tier": "Tier-2 (Affiliated)",
-  "tuition": 110000,
-  "distance_km": 29.8,
-  "competing_offers": 3,
-  "merit_aid_pct": 0.443,
-  "need_aid_pct": 0.43,
-  "total_aid_pct": 0.437,
-  "aid_amount": 48000,
-  "net_price": 62000
-}
+The US model expects the model-ready numerical features.
+
+The model-ready columns include:
+
+```text
+is_in_state
+student_aid_index
+adjusted_gross_income
+first_gen
+pell_eligible
+hs_gpa
+sat_act_percentile
+institutional_tier
+cost_of_attendance
+miles_from_campus
+fafsa_month_sin
+fafsa_month_cos
+demonstrated_interest
+merit_scholarship_amt
+need_grant_amt
+net_price
+net_price_to_income_ratio
+financial_aid_discount_rate
+unmet_financial_need_gap
+engagement_velocity
+urban_centric_locale_Rural
+urban_centric_locale_Suburb
+urban_centric_locale_Town
 ```
 
-The API processes the applicant record through the saved ML pipeline and returns the prediction response.
+The US testing notebook contains helper functions that convert raw applicant information into the exact model-ready structure before inference.
+
+---
+
+# 🔐 Configuration and Security
+
+The Redis and RabbitMQ notebooks contain development connection configuration.
+
+For actual deployment:
+
+* Do not commit passwords to GitHub.
+* Do not place production credentials directly inside notebooks.
+* Use environment variables.
+* Use a secrets manager where appropriate.
+* Enable TLS for production connections where required.
+* Restrict Redis and RabbitMQ network access.
+* Rotate credentials if they have been exposed.
+
+Example:
+
+```python
+import os
+
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+
+RABBITMQ_HOST = os.getenv("RABBITMQ_HOST")
+RABBITMQ_PORT = int(os.getenv("RABBITMQ_PORT", "5672"))
+RABBITMQ_USERNAME = os.getenv("RABBITMQ_USERNAME")
+RABBITMQ_PASSWORD = os.getenv("RABBITMQ_PASSWORD")
+```
+
+---
+
+# ⚠️ Model Compatibility
+
+The serialized model should preferably be loaded using versions of Python and machine-learning libraries compatible with the environment in which the model was trained.
+
+In particular, the following should be kept consistent when possible:
+
+```text
+Python
+scikit-learn
+XGBoost
+NumPy
+```
+
+A version mismatch can produce warnings or, in some cases, inference problems when loading a Pickle model.
 
 ---
 
 # 🧩 Project Challenges and Solutions
 
-| Challenge                                                             | Solution                                                                            |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Real student admission and financial-aid data was unavailable         | Created a synthetic dataset for the prototype                                       |
-| Different applicants have different financial and academic conditions | Simulated multiple financial-aid scenarios                                          |
-| Maximizing enrollment alone can result in excessive aid               | Considered enrollment, expected revenue, and equity constraints together            |
-| Training and testing in a single notebook reduced modularity          | Separated dataset generation, training, testing, and API into independent notebooks |
-| Reusing the trained model                                             | Saved the complete ML pipeline using Pickle                                         |
-| API input errors                                                      | Added missing-field, numeric-type, and JSON-structure validation                    |
-| Re-running the Flask notebook can create a duplicate server           | Added a health-check-based server reuse mechanism                                   |
+| Challenge                                                   | Solution                                                            |
+| ----------------------------------------------------------- | ------------------------------------------------------------------- |
+| Real student financial-aid data was unavailable             | Synthetic datasets were generated                                   |
+| Tamil Nadu and US datasets have different schemas           | Separate feature-processing and model workflows were implemented    |
+| Numerical and categorical data require different processing | Scikit-learn preprocessing pipelines are used                       |
+| US model requires model-ready numerical features            | A separate model-ready US dataset is created                        |
+| Different models are suitable for different workflows       | Random Forest is used for Tamil Nadu and XGBoost for the US dataset |
+| Model reuse is required after training                      | Trained pipelines are serialized using Pickle                       |
+| API requests may contain invalid input                      | Flask validation checks required fields and data types              |
+| Repeated predictions can require caching                    | Redis is used to store prediction results                           |
+| Prediction processing can be asynchronous                   | RabbitMQ is used for prediction events                              |
+| Multiple API requests need to be processed                  | Batch inference is tested in the model-testing workflow             |
+| Different aid levels can produce different predictions      | US testing includes aid-level scenario analysis                     |
 
-## The original project identified the lack of real student data, the limitations of a fixed aid percentage, and the risk of maximizing enrollment alone as important prototype challenges.
+---
 
 # 📈 Key Features
 
-* ✅ Synthetic student dataset generation
-* ✅ 6,000-record dataset
-* ✅ 18 applicant-related fields
-* ✅ Numerical and categorical preprocessing
-* ✅ Stratified 80/20 train-test split
-* ✅ Random Forest enrollment classifier
-* ✅ Enrollment probability prediction
-* ✅ Accuracy and ROC-AUC evaluation
-* ✅ Classification report and ROC curve
+* ✅ Synthetic financial-aid dataset generation
+* ✅ Tamil Nadu applicant dataset
+* ✅ US financial-aid dataset
+* ✅ US model-ready dataset
+* ✅ 6,000-record datasets
+* ✅ Enrollment prediction
+* ✅ Enrollment probability estimation
+* ✅ Tamil Nadu Random Forest model
+* ✅ US XGBoost model
+* ✅ Numerical feature preprocessing
+* ✅ Categorical feature encoding
+* ✅ Train/test data separation
+* ✅ Model evaluation
+* ✅ Accuracy measurement
+* ✅ Precision, recall and F1-score
+* ✅ ROC-AUC evaluation
 * ✅ Feature-importance analysis
-* ✅ Financial-aid scenario simulation
-* ✅ Expected revenue estimation
-* ✅ Equity-related optimization constraint
-* ✅ Pretrained model serialization
-* ✅ Independent model testing
+* ✅ US financial-aid scenario analysis
+* ✅ Batch inference
+* ✅ Missing-value inference testing
 * ✅ Flask REST API
-* ✅ API health-check endpoint
-* ✅ Request validation
-* ✅ GitHub-ready modular project structure
+* ✅ `/health` endpoint
+* ✅ `/predict` endpoint
+* ✅ JSON request validation
+* ✅ Prediction JSON file storage
+* ✅ Redis prediction caching
+* ✅ RabbitMQ message queue
+* ✅ Background RabbitMQ consumer
+* ✅ End-to-end prediction workflow
+* ✅ Modular Google Colab notebooks
 
 ---
 
-# ⚠️ Important Note
+# 🔄 Complete End-to-End Workflow
 
-This project is a **prototype** based on synthetic data. The generated data does not represent actual student admissions, financial-aid decisions, or enrollment behavior.
-
-For production deployment, the model would require appropriate real-world institutional data, validation, monitoring, privacy controls, and domain-specific evaluation before being used to support actual financial-aid decisions.
+```text
+                   DATA GENERATION
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+   Tamil Nadu Dataset              US Dataset
+    6000 × 18                      6000 × 25
+          │                             │
+          │                       Model Preparation
+          │                             │
+          │                             ▼
+          │                      US Model-Ready Data
+          │                        6000 × 24
+          │                             │
+          ▼                             ▼
+   Random Forest                    XGBoost
+          │                             │
+          └──────────────┬──────────────┘
+                         ▼
+                  MODEL TESTING
+                         │
+                         ▼
+             ENROLLMENT PROBABILITY
+                         │
+             ┌───────────┴───────────┐
+             ▼                       ▼
+       Financial-Aid            Applicant
+        Scenarios               Prediction
+             │                       │
+             └───────────┬───────────┘
+                         ▼
+                    FLASK API
+                         │
+             ┌───────────┴───────────┐
+             ▼                       ▼
+           Redis                 RabbitMQ
+           Cache                  Queue
+             │                       │
+             │                       ▼
+             │                   Consumer
+             │                       │
+             └───────────┬───────────┘
+                         ▼
+                  Prediction Result
+```
 
 ---
 
-# 📚 Project Resources
+# ⚠️ Important Limitations
 
-### Google Colab
+This project is a prototype based on synthetic data.
 
-**Dataset Generation**
+The generated datasets do not represent actual:
 
-[Open Notebook](https://colab.research.google.com/drive/1i0nXk5Xb9OvnfmCihBkVGXc1uPlrpPd8?usp=sharing)
+* Student admissions
+* Financial-aid applications
+* Institutional enrollment behavior
+* Student financial records
+* Real-world demographic distributions
 
-**Model Training**
+Therefore, model predictions should not be interpreted as validated real-world enrollment probabilities.
 
-[Open Notebook](https://colab.research.google.com/drive/14oMuVLanayiex6UrsG5OsTvssNRZyri8?usp=sharing)
+Before using a system of this type in a production educational environment, it would require:
 
-**Model Testing**
+* Real and appropriately governed institutional data
+* Data-quality validation
+* Model validation
+* Bias and fairness assessment
+* Privacy and security controls
+* Model monitoring
+* Institutional review
+* Appropriate human oversight
 
-[Open Notebook](https://colab.research.google.com/drive/1D_V0oWqsJlrVuvIgNaMeHVe3gn0a3uw4?usp=sharing)
+The current project demonstrates the machine-learning and software architecture required for a financial-aid yield prediction prototype.
 
-**API Endpoint**
+---
 
-[Open Notebook](https://colab.research.google.com/drive/1Ph0P2JCNwIz5Eq9Btfj28Is7nJFI_WP8?usp=sharing)
+# 📁 Data Files
 
-### GitHub Repository
+## Tamil Nadu
 
-[Strategic Financial Aid Yield Optimizer](https://github.com/Umamaheswari-2005/Strategic-Financial-Aid-Yield-Optimizer)
+```text
+tn_synthetic_aid_dataset.csv
+```
 
-### Project Documentation
+Synthetic Tamil Nadu financial-aid and enrollment dataset.
 
-[Project Documentation](https://docs.google.com/document/d/16AM_bs8FyDamn5Jd_JPJYZQHZZcdLQZ5I7Lmxc6gQg0/edit?usp=sharing)
+```text
+6,000 rows × 18 columns
+```
+
+## US Raw Dataset
+
+```text
+us_financial_aid_yield_dataset.csv
+```
+
+Synthetic US financial-aid and enrollment dataset.
+
+```text
+6,000 rows × 25 columns
+```
+
+## US Model-Ready Dataset
+
+```text
+us_dataset_model_ready.csv
+```
+
+Processed US dataset used for model training.
+
+```text
+6,000 rows × 24 columns
+```
+
+## Trained Model
+
+```text
+yield_model_pipeline.pkl
+```
+
+Serialized machine-learning pipeline used for inference.
+
+---
+
+# 📚 Notebook Summary
+
+| Notebook                                                          | Purpose                                                                       |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `Strategic_Financial_Aid_Yield_Optimizer_dataset_generator.ipynb` | Generates Tamil Nadu and US synthetic datasets                                |
+| `Strategic_Financial_Aid_Yield_Optimizer_train.ipynb`             | Trains the Tamil Nadu Random Forest and US XGBoost workflows                  |
+| `Strategic_Financial_Aid_Yield_Optimizer_test.ipynb`              | Tests the trained models and performs inference/scenario tests                |
+| `Strategic_Financial_Aid_Yield_Optimizer_endpoint.ipynb`          | Provides Flask REST API endpoints                                             |
+| `Strategic_Financial_Aid_Yield_Optimizer_redis.ipynb`             | Demonstrates Redis caching                                                    |
+| `Strategic_Financial_Aid_Yield_Optimizer_rabbitmq.ipynb`          | Demonstrates RabbitMQ message publishing and consumption                      |
+| `Strategic_Financial_Aid_Yield_Optimizer_end_to_end.ipynb`        | Combines model inference, API, Redis and RabbitMQ into an integrated workflow |
 
 ---
 
@@ -706,6 +1504,13 @@ AI/ML Developer | Machine Learning | Generative AI | Python
 
 ---
 
-## 📄 License
+# 📄 License
 
-This project is intended for educational, research, and prototype development purposes.
+This project is intended for:
+
+* Educational purposes
+* Research purposes
+* Machine-learning experimentation
+* Prototype development
+
+The synthetic datasets and prediction system should not be treated as a production financial-aid decision-making system without additional validation, governance, privacy protection, and institutional review.
